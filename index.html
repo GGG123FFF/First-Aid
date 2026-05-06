@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SSG – First Aid Incident Report</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy:   #0D1B2A;
+    --red:    #C8102E;
+    --mid:    #2C3E50;
+    --slate:  #4A5568;
+    --ash:    #8B9DB0;
+    --fog:    #F0F3F6;
+    --line:   #D1D9E0;
+    --white:  #FFFFFF;
+    --gold:   #E8A020;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  @media print {
+    html, body { font-size: 9.5pt; background: white !important; }
+    .no-print { display: none !important; }
+    .page { box-shadow: none !important; margin: 0 !important; padding: 18mm 14mm !important; max-width: 100% !important; }
+    .section { page-break-inside: avoid; }
+    input, textarea, select { border: none !important; background: transparent !important; -webkit-appearance: none; }
+    .write-line { border-bottom: 1px solid #aaa !important; background: transparent !important; }
+    .checkbox-grid label { border: 1px solid #aaa !important; }
+    .checkbox-grid input[type="checkbox"]:checked + span::before { content: "✓"; }
+  }
+
+  body {
+    font-family: 'Barlow', sans-serif;
+    background: #CBD5DF;
+    color: var(--navy);
+    min-height: 100vh;
+    padding: 24px;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .print-btn {
+    position: fixed;
+    top: 20px; right: 20px;
+    background: var(--red);
+    color: white;
+    border: none;
+    padding: 10px 22px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border-radius: 4px;
+    cursor: pointer;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  }
+
+  .print-btn:hover { background: #a00d24; }
+
+  .page {
+    background: white;
+    max-width: 780px;
+    margin: 0 auto;
+    box-shadow: 0 4px 32px rgba(0,0,0,0.18);
+    padding: 0;
+    overflow: hidden;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: var(--navy);
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 0;
+  }
+
+  .header-accent {
+    width: 8px;
+    background: var(--red);
+    align-self: stretch;
+  }
+
+  .header-text {
+    padding: 18px 20px;
+  }
+
+  .header-org {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ash);
+    margin-bottom: 3px;
+  }
+
+  .header-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: white;
+    line-height: 1;
+  }
+
+  .header-title span { color: var(--red); }
+
+  .header-sub {
+    font-size: 11px;
+    color: var(--ash);
+    margin-top: 4px;
+    font-weight: 300;
+    letter-spacing: 0.04em;
+  }
+
+  .header-ref {
+    padding: 18px 22px;
+    text-align: right;
+    border-left: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .ref-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ash);
+    margin-bottom: 6px;
+  }
+
+  .ref-box {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.15);
+    padding: 5px 10px;
+    width: 130px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: white;
+    letter-spacing: 0.06em;
+    outline: none;
+    text-align: center;
+  }
+
+  .ref-box:focus { border-color: var(--red); }
+  .ref-box::placeholder { color: rgba(255,255,255,0.2); font-size: 11px; }
+
+  .priority-band {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    border-bottom: 3px solid var(--navy);
+  }
+
+  .priority-opt {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 16px;
+    cursor: pointer;
+    border-right: 1px solid var(--line);
+    transition: background 0.15s;
+  }
+
+  .priority-opt:last-child { border-right: none; }
+  .priority-opt:hover { background: var(--fog); }
+
+  .priority-opt input[type="radio"] { display: none; }
+
+  .priority-dot {
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    border: 2px solid var(--line);
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+
+  .priority-opt input:checked ~ .priority-dot {
+    border-color: currentColor;
+  }
+
+  .priority-opt input:checked ~ .priority-dot::after {
+    content: '';
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+    display: block;
+  }
+
+  .priority-opt.green { color: #1A7A40; }
+  .priority-opt.amber { color: #C07800; }
+  .priority-opt.red   { color: var(--red); }
+
+  .priority-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .priority-desc {
+    font-size: 10px;
+    color: var(--ash);
+    font-weight: 400;
+  }
+
+  /* ── BODY ── */
+  .body { padding: 20px 24px 28px; }
+
+  /* ── SECTION ── */
+  .section { margin-bottom: 20px; }
+
+  .section-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .section-num {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    color: white;
+    background: var(--red);
+    padding: 1px 6px;
+    border-radius: 2px;
+    letter-spacing: 0.08em;
+  }
+
+  .section-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--navy);
+  }
+
+  .section-rule {
+    flex: 1;
+    height: 1px;
+    background: var(--line);
+  }
+
+  /* ── FIELD GRID ── */
+  .field-grid {
+    display: grid;
+    gap: 10px;
+  }
+
+  .field-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+  .field-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .field-grid.cols-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+  .field-grid.cols-1-2 { grid-template-columns: 1fr 2fr; }
+  .field-grid.cols-2-1 { grid-template-columns: 2fr 1fr; }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .field.span-2 { grid-column: span 2; }
+  .field.span-3 { grid-column: span 3; }
+  .field.span-4 { grid-column: span 4; }
+
+  .field-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ash);
+  }
+
+  .field-label .req { color: var(--red); margin-left: 2px; }
+
+  .write-line {
+    background: var(--fog);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 6px 9px;
+    font-family: 'Barlow', sans-serif;
+    font-size: 12px;
+    color: var(--navy);
+    width: 100%;
+    outline: none;
+    transition: border-color 0.15s, background 0.15s;
+  }
+
+  .write-line:focus { border-color: var(--navy); background: white; }
+  .write-line::placeholder { color: #bbb; }
+
+  textarea.write-line { resize: vertical; line-height: 1.5; }
+
+  /* ── CHECKBOX GRID ── */
+  .checkbox-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .checkbox-grid label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    background: var(--fog);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 11.5px;
+    font-weight: 500;
+    color: var(--slate);
+    transition: all 0.12s;
+    user-select: none;
+  }
+
+  .checkbox-grid label:hover { border-color: var(--navy); background: #E8EDF2; }
+
+  .checkbox-grid input[type="checkbox"] { display: none; }
+
+  .checkbox-grid input[type="checkbox"]:checked + span {
+    color: var(--navy);
+    font-weight: 600;
+  }
+
+  .checkbox-grid label:has(input:checked) {
+    background: var(--navy);
+    border-color: var(--navy);
+  }
+
+  .checkbox-grid label:has(input:checked) span {
+    color: white;
+  }
+
+  .checkbox-box {
+    width: 13px; height: 13px;
+    border: 1.5px solid var(--ash);
+    border-radius: 2px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    font-size: 9px;
+    color: transparent;
+    transition: all 0.12s;
+  }
+
+  .checkbox-grid label:has(input:checked) .checkbox-box {
+    background: var(--red);
+    border-color: var(--red);
+    color: white;
+  }
+
+  /* ── BODY MAP ── */
+  .body-map-wrap {
+    display: grid;
+    grid-template-columns: 1fr 220px;
+    gap: 16px;
+    align-items: start;
+  }
+
+  .body-map {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .body-map-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ash);
+    margin-bottom: 2px;
+  }
+
+  .body-svg {
+    width: 100%;
+    max-width: 220px;
+    margin: 0 auto;
+    display: block;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--fog);
+    padding: 6px;
+  }
+
+  /* ── INJURY LOCATION ── */
+  .location-text {
+    font-size: 10px;
+    color: var(--ash);
+    font-style: italic;
+    margin-top: 4px;
+  }
+
+  /* ── TREATMENT TABLE ── */
+  .treatment-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+
+  .treatment-table thead tr {
+    background: var(--navy);
+    color: white;
+  }
+
+  .treatment-table thead th {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 7px 10px;
+    text-align: left;
+  }
+
+  .treatment-table tbody tr { border-bottom: 1px solid var(--line); }
+  .treatment-table tbody tr:nth-child(even) { background: var(--fog); }
+
+  .treatment-table td {
+    padding: 4px 6px;
+  }
+
+  .treatment-table td input {
+    width: 100%;
+    border: none;
+    background: transparent;
+    font-family: 'Barlow', sans-serif;
+    font-size: 11.5px;
+    color: var(--navy);
+    outline: none;
+    padding: 2px 3px;
+  }
+
+  /* ── YES/NO INLINE ── */
+  .yn-group {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .yn-label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--slate);
+    cursor: pointer;
+    padding: 5px 10px;
+    background: var(--fog);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    transition: all 0.12s;
+  }
+
+  .yn-label:hover { border-color: var(--navy); }
+  .yn-label input { display: none; }
+  .yn-label:has(input:checked) { background: var(--navy); border-color: var(--navy); color: white; }
+
+  /* ── DIVIDER ── */
+  .divider {
+    height: 1px;
+    background: var(--line);
+    margin: 18px 0;
+  }
+
+  /* ── DECLARATION ── */
+  .declaration {
+    background: var(--fog);
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--navy);
+    border-radius: 3px;
+    padding: 12px 14px;
+    font-size: 11px;
+    color: var(--slate);
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+
+  .sig-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+  }
+
+  .sig-box {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .sig-area {
+    height: 56px;
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    position: relative;
+  }
+
+  .sig-area::after {
+    content: 'Sign here';
+    position: absolute;
+    bottom: 6px; left: 50%;
+    transform: translateX(-50%);
+    font-size: 9px;
+    color: #ccc;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-family: 'Barlow Condensed', sans-serif;
+    pointer-events: none;
+  }
+
+  /* ── FOOTER ── */
+  .form-footer {
+    background: var(--navy);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 24px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .footer-left {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--ash);
+  }
+
+  .footer-left span { color: white; }
+
+  .footer-right {
+    display: flex;
+    gap: 20px;
+  }
+
+  .footer-field {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    align-items: flex-end;
+  }
+
+  .footer-field-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ash);
+  }
+
+  .footer-field input {
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.15);
+    padding: 3px 8px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px;
+    color: white;
+    outline: none;
+    width: 120px;
+    text-align: right;
+  }
+
+  .footer-field input::placeholder { color: rgba(255,255,255,0.2); font-size: 10px; }
+  .footer-field input:focus { border-color: var(--red); }
+
+  /* ── REFERRED BADGE ── */
+  .referred-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #FFF4E5;
+    border: 1px solid #F0C060;
+    border-left: 4px solid var(--gold);
+    border-radius: 3px;
+    padding: 9px 14px;
+  }
+
+  .referred-icon { font-size: 18px; }
+
+  .referred-text {
+    font-size: 12px;
+    font-weight: 600;
+    color: #7A4800;
+    flex: 1;
+  }
+
+  .referred-text span { font-weight: 400; font-size: 11px; }
+</style>
+</head>
+<body>
+
+<button class="print-btn no-print" onclick="window.print()">🖨 Print / Save PDF</button>
+
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-accent"></div>
+    <div class="header-text">
+      <div class="header-org">SSG Support Services Group Ltd</div>
+      <div class="header-title">First Aid <span>Incident</span> Report</div>
+      <div class="header-sub">Confidential — Retain for minimum 3 years · RIDDOR may apply</div>
+    </div>
+    <div class="header-ref">
+      <div class="ref-label">Report Ref No.</div>
+      <input class="ref-box" type="text" placeholder="SSG-FA-0000" maxlength="14">
+    </div>
+  </div>
+
+  <!-- PRIORITY BAND -->
+  <div class="priority-band">
+    <label class="priority-opt green">
+      <input type="radio" name="priority" value="minor">
+      <div class="priority-dot"></div>
+      <div>
+        <div class="priority-label">Minor</div>
+        <div class="priority-desc">First aid only, no referral</div>
+      </div>
+    </label>
+    <label class="priority-opt amber">
+      <input type="radio" name="priority" value="moderate">
+      <div class="priority-dot"></div>
+      <div>
+        <div class="priority-label">Moderate</div>
+        <div class="priority-desc">Referred to hospital / GP</div>
+      </div>
+    </label>
+    <label class="priority-opt red">
+      <input type="radio" name="priority" value="serious">
+      <div class="priority-dot"></div>
+      <div>
+        <div class="priority-label">Serious / RIDDOR</div>
+        <div class="priority-desc">999 called / reportable injury</div>
+      </div>
+    </label>
+  </div>
+
+  <div class="body">
+
+    <!-- SECTION 1: INCIDENT DETAILS -->
+    <div class="section">
+      <div class="section-head">
+        <span class="section-num">01</span>
+        <span class="section-title">Incident Details</span>
+        <div class="section-rule"></div>
+      </div>
+      <div class="field-grid cols-4">
+        <div class="field">
+          <div class="field-label">Date of Incident <span class="req">*</span></div>
+          <input class="write-line" type="date">
+        </div>
+        <div class="field">
+          <div class="field-label">Time of Incident <span class="req">*</span></div>
+          <input class="write-line" type="time">
+        </div>
+        <div class="field">
+          <div class="field-label">Report Completed</div>
+          <input class="write-line" type="datetime-local">
+        </div>
+        <div class="field">
+          <div class="field-label">Contract / Site <span class="req">*</span></div>
+          <input class="write-line" type="text" placeholder="e.g. Gala Theatre">
+        </div>
+        <div class="field span-2">
+          <div class="field-label">Exact Location on Site <span class="req">*</span></div>
+          <input class="write-line" type="text" placeholder="e.g. Main entrance foyer, Stage Door steps...">
+        </div>
+        <div class="field">
+          <div class="field-label">What3Words (if applicable)</div>
+          <input class="write-line" type="text" placeholder="///word.word.word">
+        </div>
+        <div class="field">
+          <div class="field-label">Weather / Conditions</div>
+          <input class="write-line" type="text" placeholder="e.g. Wet floor, poor lighting">
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 2: CASUALTY DETAILS -->
+    <div class="section">
+      <div class="section-head">
+        <span class="section-num">02</span>
+        <span class="section-title">Casualty Details</span>
+        <div class="section-rule"></div>
+      </div>
+      <div class="field-grid cols-3">
+        <div class="field span-2">
+          <div class="field-label">Full Name <span class="req">*</span></div>
+          <input class="write-line" type="text" placeholder="Surname, First name">
+        </div>
+        <div class="field">
+          <div class="field-label">Date of Birth / Age</div>
+          <input class="write-line" type="text" placeholder="DD/MM/YYYY or approx. age">
+        </div>
+        <div class="field">
+          <div class="field-label">Gender</div>
+          <div class="checkbox-grid">
+            <label><input type="radio" name="gender"><span><div class="checkbox-box">✓</div> Male</span></label>
+            <label><input type="radio" name="gender"><span><div class="checkbox-box">✓</div> Female</span></label>
+            <label><input type="radio" name="gender"><span><div class="checkbox-box">✓</div> Other</span></label>
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-label">Casualty Type <span class="req">*</span></div>
+          <div class="checkbox-grid">
+            <label><input type="radio" name="cas-type"><span><div class="checkbox-box">✓</div> SSG Staff</span></label>
+            <label><input type="radio" name="cas-type"><span><div class="checkbox-box">✓</div> Client Staff</span></label>
+            <label><input type="radio" name="cas-type"><span><div class="checkbox-box">✓</div> Member of Public</span></label>
+            <label><input type="radio" name="cas-type"><span><div class="checkbox-box">✓</div> Contractor</span></label>
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-label">Contact Number</div>
+          <input class="write-line" type="tel" placeholder="Mobile or home number">
+        </div>
+        <div class="field span-3">
+          <div class="field-label">Address / Next of Kin (if required)</div>
+          <input class="write-line" type="text" placeholder="Address or next of kin name and contact number">
+        </div>
+        <div class="field span-2">
+          <div class="field-label">Known Medical Conditions / Allergies</div>
+          <input class="write-line" type="text" placeholder="e.g. diabetic, penicillin allergy, epilepsy — or 'None known'">
+        </div>
+        <div class="field">
+          <div class="field-label">Consent to Treatment Given?</div>
+          <div class="yn-group">
+            <label class="yn-label"><input type="radio" name="consent"><span>Yes</span></label>
+            <label class="yn-label"><input type="radio" name="consent"><span>No</span></label>
+            <label class="yn-label"><input type="radio" name="consent"><span>Unable to consent</span></label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 3: NATURE OF INJURY -->
+    <div class="section">
+      <div class="section-head">
+        <span class="section-num">03</span>
+        <span class="section-title">Nature of Injury / Illness</span>
+        <div class="section-rule"></div>
+      </div>
+      <div class="body-map-wrap">
+        <div>
+          <div class="field-label" style="margin-bottom:8px;">Injury Type <span class="req">*</span> (select all that apply)</div>
+          <div class="checkbox-grid" style="margin-bottom:12px;">
+            <label><input type="checkbox"><span><div class="checkbox-box">✓</div> Laceration / Cut</span></label>
+            <label><input type="checkbox"><span><div class="checkbox-box">✓</div> Bruising / Contusion</span></label>
+            <label><input type="checkbox"><span><div class="checkbox-box">✓</div> Fracture / Suspected fracture</span></label>
+            <label><input type="checkbox"><span><div class="checkbox-box">✓</div> Sprain / Strain</span></label>
+            <label><input type="checkbox"><span><div class="checkbox-box">✓</div> Burn / Scald</span></label>
+            <label><input type="checkbox"><span><div class="checkbox-box">✓</div> Head injury</span></label>
+            <label><input type="checkbox"><span><div class="checkbox-box">✓</div> Loss of consciousness</span></label>
+            <label><input type="checkbox"><span><div class="checkbox-box">✓</div> Cardiac / Breathing</span></label>
+            <label><input type="checkbox"><span><div class="checkbox-box">✓</div> Allergic reaction</span></label>
+            <label><input type="checkbox"><span><div class="checkbox-box">✓</div> Diabetic episode</span></label>
+            <label><input type="checkbox"><span><div class="checkbox-box">✓</div> Seizure / Epilepsy</span></label>
+            <label><input type="checkbox"><span><div class="checkbox-box">✓</div> Shock</span></label>
+            <label><input type="checkbox"><span><div class="checkbox-box">✓</div> Eye injury</span></label>
+            <label><input type="checkbox"><span><div class="checkbox-box">✓</div> Dental injury</span></label>
+            <label><input type="checkbox"><span><div class="checkbox-box">✓</div> Aggression / Assault</span></label>
+            <label><input type="checkbox"><span><div class="checkbox-box">✓</div> Other (describe below)</span></label>
+          </div>
+          <div class="field">
+            <div class="field-label">Body Location (describe) <span class="req">*</span></div>
+            <input class="write-line" type="text" placeholder="e.g. Left forearm, right knee, lower back...">
+          </div>
+          <div class="location-text">Mark on body diagram →  or describe precisely above</div>
+        </div>
+        <div>
+          <div class="body-map-label">Body Diagram — mark injury location(s)</div>
+          <!-- Simple SVG body outline -->
+          <svg class="body-svg" viewBox="0 0 120 280" xmlns="http://www.w3.org/2000/svg">
+            <!-- Head -->
+            <ellipse cx="60" cy="22" rx="16" ry="18" fill="none" stroke="#4A5568" stroke-width="1.5"/>
+            <!-- Neck -->
+            <rect x="54" y="38" width="12" height="10" rx="2" fill="none" stroke="#4A5568" stroke-width="1.5"/>
+            <!-- Torso -->
+            <rect x="35" y="48" width="50" height="65" rx="5" fill="none" stroke="#4A5568" stroke-width="1.5"/>
+            <!-- Left arm -->
+            <rect x="18" y="48" width="14" height="55" rx="5" fill="none" stroke="#4A5568" stroke-width="1.5"/>
+            <!-- Left hand -->
+            <ellipse cx="25" cy="110" rx="8" ry="6" fill="none" stroke="#4A5568" stroke-width="1.5"/>
+            <!-- Right arm -->
+            <rect x="88" y="48" width="14" height="55" rx="5" fill="none" stroke="#4A5568" stroke-width="1.5"/>
+            <!-- Right hand -->
+            <ellipse cx="95" cy="110" rx="8" ry="6" fill="none" stroke="#4A5568" stroke-width="1.5"/>
+            <!-- Pelvis -->
+            <rect x="35" y="113" width="50" height="22" rx="3" fill="none" stroke="#4A5568" stroke-width="1.5"/>
+            <!-- Left leg -->
+            <rect x="35" y="135" width="22" height="75" rx="5" fill="none" stroke="#4A5568" stroke-width="1.5"/>
+            <!-- Left foot -->
+            <ellipse cx="46" cy="215" rx="12" ry="7" fill="none" stroke="#4A5568" stroke-width="1.5"/>
+            <!-- Right leg -->
+            <rect x="63" y="135" width="22" height="75" rx="5" fill="none" stroke="#4A5568" stroke-width="1.5"/>
+            <!-- Right foot -->
+            <ellipse cx="74" cy="215" rx="12" ry="7" fill="none" stroke="#4A5568" stroke-width="1.5"/>
+            <!-- Labels -->
+            <text x="60" y="240" text-anchor="middle" font-size="7" fill="#8B9DB0" font-family="Barlow, sans-serif" font-style="italic">FRONT VIEW</text>
+            <!-- Center line guide -->
+            <line x1="60" y1="4" x2="60" y2="225" stroke="#D1D9E0" stroke-width="0.5" stroke-dasharray="3,3"/>
+          </svg>
+          <div style="font-size:9px;color:var(--ash);text-align:center;margin-top:4px;font-style:italic;">Mark with pen on printed copy</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 4: INCIDENT DESCRIPTION -->
+    <div class="section">
+      <div class="section-head">
+        <span class="section-num">04</span>
+        <span class="section-title">Incident Description</span>
+        <div class="section-rule"></div>
+      </div>
+      <div class="field-grid cols-1">
+        <div class="field">
+          <div class="field-label">How did the incident occur? <span class="req">*</span> (factual account — who, what, where, when, how)</div>
+          <textarea class="write-line" rows="4" placeholder="Provide a clear, factual description of what happened. Include sequence of events leading up to the incident, actions taken immediately, and any observed cause..."></textarea>
+        </div>
+        <div class="field">
+          <div class="field-label">Casualty's own account of what happened (if given)</div>
+          <textarea class="write-line" rows="2" placeholder="Record the casualty's own words where possible..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 5: TREATMENT GIVEN -->
+    <div class="section">
+      <div class="section-head">
+        <span class="section-num">05</span>
+        <span class="section-title">Treatment Given</span>
+        <div class="section-rule"></div>
+      </div>
+      <table class="treatment-table">
+        <thead>
+          <tr>
+            <th style="width:90px;">Time</th>
+            <th>Treatment / Action Taken</th>
+            <th style="width:130px;">Given By</th>
+            <th style="width:110px;">Qualification</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><input type="time"></td><td><input type="text" placeholder="e.g. Wound cleaned and dressed with sterile dressing..."></td><td><input type="text" placeholder="Full name"></td><td><input type="text" placeholder="e.g. EFAW, FAW"></td></tr>
+          <tr><td><input type="time"></td><td><input type="text" placeholder="e.g. Ice pack applied to swelling..."></td><td><input type="text" placeholder="Full name"></td><td><input type="text" placeholder="e.g. EFAW, FAW"></td></tr>
+          <tr><td><input type="time"></td><td><input type="text" placeholder="e.g. CPR commenced, AED applied..."></td><td><input type="text" placeholder="Full name"></td><td><input type="text" placeholder="e.g. EFAW, FAW"></td></tr>
+          <tr><td><input type="time"></td><td><input type="text" placeholder=""></td><td><input type="text" placeholder="Full name"></td><td><input type="text" placeholder=""></td></tr>
+        </tbody>
+      </table>
+
+      <div style="margin-top:12px;">
+        <div class="field-grid cols-3" style="margin-top:10px;">
+          <div class="field">
+            <div class="field-label">AED Used?</div>
+            <div class="yn-group">
+              <label class="yn-label"><input type="radio" name="aed"><span>Yes</span></label>
+              <label class="yn-label"><input type="radio" name="aed"><span>No</span></label>
+            </div>
+          </div>
+          <div class="field">
+            <div class="field-label">AED Serial / Location</div>
+            <input class="write-line" type="text" placeholder="Serial no. or cabinet location">
+          </div>
+          <div class="field">
+            <div class="field-label">First Aid Kit Ref Used</div>
+            <input class="write-line" type="text" placeholder="Kit ID / location">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 6: OUTCOME -->
+    <div class="section">
+      <div class="section-head">
+        <span class="section-num">06</span>
+        <span class="section-title">Outcome &amp; Referral</span>
+        <div class="section-rule"></div>
+      </div>
+      <div class="field-grid cols-2" style="margin-bottom:12px;">
+        <div class="field">
+          <div class="field-label">Outcome <span class="req">*</span></div>
+          <div class="checkbox-grid">
+            <label><input type="radio" name="outcome"><span><div class="checkbox-box">✓</div> Treated on site, no referral</span></label>
+            <label><input type="radio" name="outcome"><span><div class="checkbox-box">✓</div> Advised to see GP</span></label>
+            <label><input type="radio" name="outcome"><span><div class="checkbox-box">✓</div> Taken to A&amp;E by self/family</span></label>
+            <label><input type="radio" name="outcome"><span><div class="checkbox-box">✓</div> Ambulance called (999)</span></label>
+            <label><input type="radio" name="outcome"><span><div class="checkbox-box">✓</div> Ambulance attended, not conveyed</span></label>
+            <label><input type="radio" name="outcome"><span><div class="checkbox-box">✓</div> Conveyed to hospital by ambulance</span></label>
+            <label><input type="radio" name="outcome"><span><div class="checkbox-box">✓</div> Declined treatment</span></label>
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-label">Emergency Services</div>
+          <div class="field-grid cols-1" style="gap:8px;">
+            <div class="field">
+              <div class="field-label" style="font-size:9px;">999 Called at (time)</div>
+              <input class="write-line" type="time">
+            </div>
+            <div class="field">
+              <div class="field-label" style="font-size:9px;">Ambulance Arrived at (time)</div>
+              <input class="write-line" type="time">
+            </div>
+            <div class="field">
+              <div class="field-label" style="font-size:9px;">Hospital / Destination</div>
+              <input class="write-line" type="text" placeholder="Hospital name and department">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="referred-row">
+        <div class="referred-icon">⚠️</div>
+        <div class="referred-text">
+          RIDDOR Check — <span>Does this incident meet a RIDDOR-reportable threshold? (death, specified injury, 7+ day incapacitation, dangerous occurrence, occupational disease — employee or self-employed only)</span>
+        </div>
+        <div class="yn-group">
+          <label class="yn-label"><input type="radio" name="riddor"><span>Yes – report to HSE</span></label>
+          <label class="yn-label"><input type="radio" name="riddor"><span>No</span></label>
+          <label class="yn-label"><input type="radio" name="riddor"><span>Under review</span></label>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 7: WITNESSES -->
+    <div class="section">
+      <div class="section-head">
+        <span class="section-num">07</span>
+        <span class="section-title">Witnesses</span>
+        <div class="section-rule"></div>
+      </div>
+      <div class="field-grid cols-3">
+        <div class="field">
+          <div class="field-label">Witness 1 — Name</div>
+          <input class="write-line" type="text" placeholder="Full name">
+        </div>
+        <div class="field">
+          <div class="field-label">Role / Relation</div>
+          <input class="write-line" type="text" placeholder="e.g. SSG Officer, member of public">
+        </div>
+        <div class="field">
+          <div class="field-label">Contact</div>
+          <input class="write-line" type="text" placeholder="Phone / email">
+        </div>
+        <div class="field">
+          <div class="field-label">Witness 2 — Name</div>
+          <input class="write-line" type="text" placeholder="Full name">
+        </div>
+        <div class="field">
+          <div class="field-label">Role / Relation</div>
+          <input class="write-line" type="text" placeholder="e.g. SSG Officer, member of public">
+        </div>
+        <div class="field">
+          <div class="field-label">Contact</div>
+          <input class="write-line" type="text" placeholder="Phone / email">
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 8: CONTRIBUTING FACTORS -->
+    <div class="section">
+      <div class="section-head">
+        <span class="section-num">08</span>
+        <span class="section-title">Contributing Factors &amp; Preventive Actions</span>
+        <div class="section-rule"></div>
+      </div>
+      <div class="field-grid cols-2">
+        <div class="field">
+          <div class="field-label">Contributing factors (select all that apply)</div>
+          <div class="checkbox-grid">
+            <label><input type="checkbox"><span><div class="checkbox-box">✓</div> Wet / slippery surface</span></label>
+            <label><input type="checkbox"><span><div class="checkbox-box">✓</div> Poor lighting</span></label>
+            <label><input type="checkbox"><span><div class="checkbox-box">✓</div> Crowd / overcrowding</span></label>
+            <label><input type="checkbox"><span><div class="checkbox-box">✓</div> Substance intoxication</span></label>
+            <label><input type="checkbox"><span><div class="checkbox-box">✓</div> Pre-existing medical condition</span></label>
+            <label><input type="checkbox"><span><div class="checkbox-box">✓</div> Environmental / weather</span></label>
+            <label><input type="checkbox"><span><div class="checkbox-box">✓</div> Assault / aggression</span></label>
+            <label><input type="checkbox"><span><div class="checkbox-box">✓</div> Inadequate signage</span></label>
+            <label><input type="checkbox"><span><div class="checkbox-box">✓</div> Equipment failure</span></label>
+            <label><input type="checkbox"><span><div class="checkbox-box">✓</div> Human error</span></label>
+            <label><input type="checkbox"><span><div class="checkbox-box">✓</div> Unknown</span></label>
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-label">Immediate preventive / corrective action taken</div>
+          <textarea class="write-line" rows="5" placeholder="Describe any immediate actions taken to prevent recurrence or make the area safe — e.g. hazard coned off, management notified, area closed..."></textarea>
+        </div>
+        <div class="field span-2">
+          <div class="field-label">Recommended follow-up actions / further investigation required</div>
+          <textarea class="write-line" rows="2" placeholder="e.g. Review of first aid kit stock, CCTV review requested, site risk assessment update required..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- DECLARATION -->
+    <div class="divider"></div>
+
+    <div class="declaration">
+      I declare that the information recorded on this form is accurate and complete to the best of my knowledge. I understand that this report may be used in legal proceedings, insurance claims, or regulatory investigations. This form must be submitted to the SSG Northern Contracts Manager within 24 hours of the incident.
+    </div>
+
+    <!-- SECTION 9: SIGNATURES -->
+    <div class="section">
+      <div class="section-head">
+        <span class="section-num">09</span>
+        <span class="section-title">Signatures</span>
+        <div class="section-rule"></div>
+      </div>
+      <div class="sig-grid">
+        <div class="sig-box">
+          <div class="field-label">First Aider / Reporting Officer</div>
+          <div class="sig-area"></div>
+          <input class="write-line" type="text" placeholder="Print name" style="margin-top:4px;">
+          <input class="write-line" type="text" placeholder="SIA / FA qualification no." style="margin-top:4px;">
+          <input class="write-line" type="date" style="margin-top:4px;">
+        </div>
+        <div class="sig-box">
+          <div class="field-label">Casualty (where possible)</div>
+          <div class="sig-area"></div>
+          <input class="write-line" type="text" placeholder="Print name" style="margin-top:4px;">
+          <input class="write-line" type="date" style="margin-top:4px;">
+          <input class="write-line" type="text" placeholder="Reason if unable to sign" style="margin-top:4px;">
+        </div>
+        <div class="sig-box">
+          <div class="field-label">Site / Shift Supervisor</div>
+          <div class="sig-area"></div>
+          <input class="write-line" type="text" placeholder="Print name" style="margin-top:4px;">
+          <input class="write-line" type="text" placeholder="Role" style="margin-top:4px;">
+          <input class="write-line" type="date" style="margin-top:4px;">
+        </div>
+      </div>
+    </div>
+
+    <!-- MANAGEMENT REVIEW -->
+    <div class="section" style="margin-top:16px;">
+      <div class="section-head">
+        <span class="section-num" style="background:var(--navy);">MGR</span>
+        <span class="section-title">Management Review (SSG Office Use)</span>
+        <div class="section-rule"></div>
+      </div>
+      <div class="field-grid cols-3">
+        <div class="field">
+          <div class="field-label">Reviewed by</div>
+          <input class="write-line" type="text" placeholder="Manager name">
+        </div>
+        <div class="field">
+          <div class="field-label">Date reviewed</div>
+          <input class="write-line" type="date">
+        </div>
+        <div class="field">
+          <div class="field-label">RIDDOR reported to HSE?</div>
+          <div class="yn-group">
+            <label class="yn-label"><input type="radio" name="hse-reported"><span>Yes</span></label>
+            <label class="yn-label"><input type="radio" name="hse-reported"><span>No</span></label>
+            <label class="yn-label"><input type="radio" name="hse-reported"><span>N/A</span></label>
+          </div>
+        </div>
+        <div class="field span-2">
+          <div class="field-label">Management notes / actions</div>
+          <textarea class="write-line" rows="2" placeholder="Further investigation, insurance notification, HR referral, client notification..."></textarea>
+        </div>
+        <div class="field">
+          <div class="field-label">File / Case Reference</div>
+          <input class="write-line" type="text" placeholder="Internal case ref.">
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /body -->
+
+  <!-- FOOTER -->
+  <div class="form-footer">
+    <div class="footer-left">
+      <span>SSG Support Services Group Ltd</span> · First Aid Incident Report · FA-001 Rev.3<br>
+      Complete in full · Submit to Northern Contracts Manager within 24 hours · Retain 3 years minimum
+    </div>
+    <div class="footer-right">
+      <div class="footer-field">
+        <div class="footer-field-label">Form Version</div>
+        <input type="text" value="FA-001 Rev.3" readonly style="width:90px;cursor:default;">
+      </div>
+      <div class="footer-field">
+        <div class="footer-field-label">Page</div>
+        <input type="text" value="1 of 1" readonly style="width:60px;cursor:default;">
+      </div>
+    </div>
+  </div>
+
+</div><!-- /page -->
+
+<script>
+  // Checkbox toggle visual feedback
+  document.querySelectorAll('.checkbox-grid input[type="checkbox"]').forEach(cb => {
+    cb.addEventListener('change', function() {
+      const box = this.parentElement.querySelector('.checkbox-box');
+      if (box) box.textContent = this.checked ? '✓' : '';
+    });
+  });
+
+  // Radio visual feedback for checkbox-style radios
+  document.querySelectorAll('.checkbox-grid input[type="radio"]').forEach(rb => {
+    rb.addEventListener('change', function() {
+      const name = this.name;
+      document.querySelectorAll(`.checkbox-grid input[type="radio"][name="${name}"]`).forEach(r => {
+        const box = r.parentElement.querySelector('.checkbox-box');
+        if (box) box.textContent = '';
+      });
+      const box = this.parentElement.querySelector('.checkbox-box');
+      if (box) box.textContent = '✓';
+    });
+  });
+</script>
+
+</body>
+</html>
