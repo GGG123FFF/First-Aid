@@ -1,6 +1,6 @@
 <title>Summonforge Descent</title>
 <meta charset="utf-8">
-<meta name="sfd-build" content="45">
+<meta name="sfd-build" content="47">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -2232,9 +2232,9 @@ function recordsPage(L) {
   return { m: '★', t: 'Records and Deeds', sub: 'Your legend so far', body };
 }
 /* ============ farm, cooking and village projects ============ */
-const FARM = { x0: 72, y0: 112, x1: 87, y1: 120, fx0: 71, fy0: 111, fx1: 88, fy1: 121, gx: [79, 80] };
+const FARM = { x0: 72, y0: 112, x1: 87, y1: 124, fx0: 71, fy0: 111, fx1: 88, fy1: 125, gx: [79, 80] };
 const FARMSTEAD = { x0: 58, y0: 103, x1: 102, y1: 126 };
-const FIELD = [[77, 112, 82, 114], [75, 112, 84, 115], [73, 112, 86, 118], [72, 112, 87, 120]];
+const FIELD = [[77, 112, 82, 114], [75, 112, 84, 115], [73, 112, 86, 118], [72, 112, 87, 120], [72, 112, 87, 124]];
 const WET_T = 480, MEAL_T = 600;
 const CROPS = {
   turnip: { n: 'Turnip', seed: 10, sell: 25, grow: 240, st: 0, d: 'Quick and hardy.' },
@@ -2268,6 +2268,7 @@ const PROJ = {
   pipes: { n: 'Well Pipes', g: 500, need: { turnip: 15, potato: 8 }, d: 'A new well and pipes. Every plot stays watered, always.' },
   field2: { n: 'Clear the Far Field', g: 600, need: { potato: 10, pumpkin: 5 }, req: 'field1', d: 'Grow the field to 98 plots.' },
   field3: { n: 'The Great Field', g: 1500, need: { potato: 15, pumpkin: 10, cauliflower: 8 }, req: 'field2', d: 'Clear every last weed: 144 plots.' },
+  field4: { n: 'Southern Acres', g: 3000, need: { potato: 20, pumpkin: 15, cauliflower: 10 }, req: 'field3', d: 'Push the fence south and plough four more rows: 208 plots.' },
   hens: { n: 'Hen House', g: 600, need: { wheat: 10, plank: 12 }, d: 'A coop east of the kitchen. Four hens lay eggs while you are away.' },
   stonewall: { n: 'Stone Wall', g: 900, need: { stone: 80, plank: 20 }, d: 'Replace the picket fence around Lanternrest with stone. Stronger against raids; guards hit 40% harder.' },
   fortwall: { n: 'Fortified Wall', g: 2200, need: { stone: 160, ironbar: 10, plank: 30 }, req: 'stonewall', d: 'Battlements and gate towers. Very hard to breach; guards hit 80% harder.' },
@@ -2287,7 +2288,7 @@ const DANI = {
 };
 const projOn = (k) => !!(S.proj && S.proj[k]);
 function FS() { if (!S.farm || typeof S.farm !== 'object') S.farm = {}; const f = S.farm; f.p = f.p || {}; f.seeds = f.seeds || { turnip: 6 }; f.crops = f.crops || {}; f.sel = f.sel || 'turnip'; return f; }
-const fieldLvl = () => (projOn('field3') ? 3 : projOn('field2') ? 2 : projOn('field1') ? 1 : 0);
+const fieldLvl = () => (projOn('field4') ? 4 : projOn('field3') ? 3 : projOn('field2') ? 2 : projOn('field1') ? 1 : 0);
 const inField = (x, y) => { const r = FIELD[fieldLvl()]; return x >= r[0] && x <= r[2] && y >= r[1] && y <= r[3]; };
 const inPlots = (x, y) => x >= FARM.x0 && x <= FARM.x1 && y >= FARM.y0 && y <= FARM.y1;
 const inFence = (x, y) => x >= FARM.fx0 && x <= FARM.fx1 && y >= FARM.fy0 && y <= FARM.fy1;
@@ -3398,7 +3399,7 @@ function defenceSetup() {
     G.dpois.push({ kind: 'coop', x: 97 * TILE, y: 115.6 * TILE, label: 'Collect eggs' });
   }
   /* scarecrows on the fence corners */
-  const sc = Math.min(4, (FS().scare || 0)); [[71, 111], [88, 111], [71, 121], [88, 121]].slice(0, sc).forEach(([x, y]) => props.push({ kind: 'gdeco', v: 'd_scare', x: (x + .5) * TILE, y: (y + .7) * TILE, sc: .9 }));
+  const sc = Math.min(4, (FS().scare || 0)); [[71, 111], [88, 111], [71, 125], [88, 125]].slice(0, sc).forEach(([x, y]) => props.push({ kind: 'gdeco', v: 'd_scare', x: (x + .5) * TILE, y: (y + .7) * TILE, sc: .9 }));
   /* camps with hostages */
   for (const c of D2.camps) {
     props = props.filter((q) => !((q.kind === 'node' || (q.kind === 'deco' && NATURAL[q.v])) && Math.hypot(q.x / TILE - c.x - .5, q.y / TILE - c.y - .5) < 3.2));
@@ -3588,7 +3589,7 @@ function rescueHTML() {
 }
 /* new recipes, materials and meals */
 MATS.egg = { n: 'Egg', v: 6 };
-RCP.push({ id: 'scare', cat: 'farm', n: 'Scarecrow', need: { wood: 8, fibre: 10, pumpkin: 1 }, req: { farm: 1 }, run: () => { FS().scare = Math.min(4, (FS().scare || 0) + 1); const c = [[71, 111], [88, 111], [71, 121], [88, 121]][FS().scare - 1]; if (G.world && c) props.push({ kind: 'gdeco', v: 'd_scare', x: (c[0] + .5) * TILE, y: (c[1] + .7) * TILE, sc: .9 }); }, ok: () => (FS().scare || 0) < 4, d: 'Stands on a corner of your field. Each one saves crops from raiders 20% of the time (up to 4).' });
+RCP.push({ id: 'scare', cat: 'farm', n: 'Scarecrow', need: { wood: 8, fibre: 10, pumpkin: 1 }, req: { farm: 1 }, run: () => { FS().scare = Math.min(4, (FS().scare || 0) + 1); const c = [[71, 111], [88, 111], [71, 125], [88, 125]][FS().scare - 1]; if (G.world && c) props.push({ kind: 'gdeco', v: 'd_scare', x: (c[0] + .5) * TILE, y: (c[1] + .7) * TILE, sc: .9 }); }, ok: () => (FS().scare || 0) < 4, d: 'Stands on a corner of your field. Each one saves crops from raiders 20% of the time (up to 4).' });
 RCP.push({ id: 'repair', cat: 'supply', n: 'Wall Repairs', need: { stone: 10, plank: 4 }, run: () => { S.wallHP = WALLHP(); }, ok: () => (S.wallHP || 0) < WALLHP(), d: 'Fully repair the Lanternrest wall.' });
 Object.assign(MEALS, {
   omelette: { n: 'Herb Omelette', need: { egg: 2, herb: 1 }, d: '+15% life and +10% speed', fx: { hp: .15, spd: .1 } },
@@ -4013,6 +4014,108 @@ function drawHome() {
   const _sw = startWorld; startWorld = function () { G.home = null; G.homeSave = null; return _sw.apply(this, arguments); };
 }
 window.__hi = { homeEnter, homeLeave, homeBuild, HO };
+/* ============ build 47: nicer fence + repair at the wall, chaff packs for crafting, patch kits ============ */
+MATS.glue = { n: 'Slime Glue', v: 10, ic: 'm_sap' };
+MATS.patch = { n: 'Fence Patch Kit', v: 22, ic: 'm_plank' };
+MAT_ORDER.push('glue', 'patch');
+RCP.push(
+  { id: 'glue', cat: 'basic', n: 'Slime Glue x2', need: { gel: 3, sap: 1 }, give: ['glue', 2], d: 'Sticky stuff. Good for patching things.' },
+  { id: 'patch', cat: 'supply', n: 'Fence Patch Kit', need: { plank: 2, glue: 1, fibre: 2 }, give: ['patch', 1], d: 'One kit repairs 30% of the wall at any tier. Use it at the wall.' }
+);
+
+/* ---------- chaff: weak packs that drop crafting materials ---------- */
+const CH = (n, spr, hp, dmg, loot, o) => Object.assign({ n, spr, H: 44, hp, dmg, spd: 2.2, ai: 'melee', xp: 3, cd: 1.1, wind: .25, r: 9, wild: 1, loot }, o || {});
+Object.assign(EN, {
+  mslime: CH('Moss Slime', 'gh_slime_g', 14, 3, [['gel', 1, 2], ['sap', 0, 2, .6], ['fibre', 0, 2, .6]]),
+  cslime: CH('Clay Slime', 'gh_slime_b', 22, 5, [['gel', 1, 2], ['stone', 1, 2], ['clay', 0, 2, .5], ['iron', 0, 1, .35]], { xp: 4 }),
+  rslime: CH('Reed Slime', 'gh_slime_b', 18, 4, [['gel', 1, 2], ['reed', 1, 3], ['clay', 0, 1, .4], ['sand', 0, 2, .5]]),
+  eslime: CH('Ember Slime', 'gh_slime_r', 30, 7, [['gel', 1, 1], ['coal', 0, 1, .5], ['shard', 0, 1, .3]], { xp: 6 }),
+  vslime: CH('Ruin Slime', 'gh_slime_g', 24, 5, [['gel', 1, 1], ['stone', 1, 2], ['relic', 0, 1, .25]], { xp: 5 })
+});
+EN.gslime.loot.push(['fibre', 0, 2, .5]); EN.bslime.loot.push(['reed', 0, 2, .5]);
+WILD.fields.push('gslime', 'gslime', 'mslime'); WILD.wood.push('mslime', 'mslime', 'mslime', 'mslime'); WILD.heights.push('cslime', 'cslime', 'cslime', 'cslime');
+WILD.lake.push('rslime', 'rslime', 'rslime'); WILD.ruins.push('vslime', 'vslime', 'vslime', 'vslime'); WILD.ash.push('eslime', 'eslime', 'eslime', 'eslime');
+const PACKS = { gslime: 1, bslime: 1, mslime: 1, cslime: 1, rslime: 1, eslime: 1, vslime: 1 };
+spawnWild = function (n, anywhere) {
+  let made = 0;
+  for (let t = 0; t < 500 && made < n; t++) {
+    const x = 4 + Math.floor(rnd() * (WW - 8)), y = 4 + Math.floor(rnd() * (WH - 8)); if (solidT(x, y) || grid[y * WW + x] !== 0) continue;
+    if (inTown((x + .5) * TILE, (y + .5) * TILE) || Math.hypot(x - VCX, y - VCY) < 20) continue;
+    const dp = Math.hypot((x + .5) * TILE - P.x, (y + .5) * TILE - P.y); if (!anywhere && (dp < 12 * TILE || dp > 38 * TILE)) continue;
+    const r = WREG[WORLD.reg[y * WW + x]], list = WILD[r.id]; if (!list) continue; const ty = pick(list), cnt = PACKS[ty] ? ri(3, 5) : ty === 'boar' || ty === 'fox' ? 1 : ri(1, 3), f0 = G.floor;
+    G.floor = Math.max(1, Math.round(r.tier * .5));
+    for (let i = 0; i < cnt; i++) { const e = spawnEnemy(ty, (x + .5) * TILE + rand(-26, 26), (y + .5) * TILE + rand(-26, 26), false); e.lootF = G.floor; e.dir = pick(['down', 'left', 'right', 'up']); }
+    G.floor = f0; made++;
+  }
+};
+{
+  const _gs = gatherSetup; gatherSetup = function () { _gs(); spawnWild(8, true); };
+  const _gt = gatherTick; gatherTick = function (dt) {
+    _gt(dt); if (!G.world) return; G.chT = (G.chT || 0) - dt;
+    if (G.chT <= 0) { G.chT = 5; if (enemies.filter((e) => !e.dead && e.d && e.d.wild).length < 90) spawnWild(2); }
+  };
+  const _ke = killEnemy;
+  killEnemy = function (e) {
+    _ke(e); if (!G.world || !e.d || e.d.wild || e.kind !== 'mob' || rnd() > .25) return;
+    const m = REGMAT[wReg(e.x, e.y).id]; if (m) { invAdd(m, 1); ftext(e.x, e.y - 58, '+1 ' + MATS[m].n, '#ffe08a', 12, 1.2); }
+  };
+}
+
+/* ---------- the fence: nicer pickets, visible damage, repair at the wall ---------- */
+function picketDraw(p, hp) {
+  const x = p.tx * TILE, y = p.ty * TILE, s = WORLD.def.set, nb = (dx, dy) => s.has((p.ty + dy) * WW + p.tx + dx);
+  const hz = nb(-1, 0) || nb(1, 0), vt = nb(0, -1) || nb(0, 1), dm = 1 - hp, h = hash(p.tx, p.ty), by = y + TILE - 4, bk = h < dm * 1.3;
+  const hh = (i) => hash(p.tx * 5 + i, p.ty * 3 + i * 7);
+  if (hz || !vt) {
+    ctx.fillStyle = 'rgba(0,0,0,.22)'; ctx.fillRect(x, by - 1, TILE + 1, 4);
+    for (const [ry, k] of [[by - 21, 0], [by - 11, 1]]) {
+      const gap = bk && dm > .45 && hh(k + 20) < dm * .8; ctx.fillStyle = '#6b4423';
+      if (gap) { ctx.fillRect(x, ry, 10, 3); ctx.fillRect(x + TILE - 8, ry + 2, 9, 3); } else ctx.fillRect(x, ry, TILE + 1, 3);
+      ctx.fillStyle = '#a06a38'; if (!gap) ctx.fillRect(x, ry, TILE + 1, 1);
+    }
+    for (let i = 0; i < 5; i++) {
+      const px = x + 2 + i * 6.2, r = hh(i), gone = bk && r < dm * .55, lean = bk && !gone && r < dm * .9;
+      if (gone) { ctx.fillStyle = '#4a2e16'; ctx.fillRect(px - 2, by - 3, 9, 3); ctx.fillStyle = '#7a5028'; ctx.fillRect(px - 2, by - 3, 9, 1); continue; }
+      ctx.save(); if (lean) { ctx.translate(px + 2.5, by); ctx.rotate((r < dm * .45 ? -1 : 1) * .32); ctx.translate(-(px + 2.5), -by); }
+      ctx.fillStyle = i % 2 ? '#a5733c' : '#b5834a'; ctx.fillRect(px, by - 27, 5, 27);
+      ctx.beginPath(); ctx.moveTo(px, by - 27); ctx.lineTo(px + 2.5, by - 32); ctx.lineTo(px + 5, by - 27); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = 'rgba(0,0,0,.18)'; ctx.fillRect(px + 4, by - 27, 1, 27); ctx.restore();
+    }
+    if (p.tx % 2 === 0) { ctx.fillStyle = '#5a3a1c'; ctx.fillRect(x - 2, by - 36, 5, 36); ctx.fillStyle = '#8a5a2e'; ctx.fillRect(x - 3, by - 38, 7, 3); }
+  }
+  if (vt) {
+    const cx = x + TILE / 2; ctx.fillStyle = 'rgba(0,0,0,.2)'; ctx.fillRect(cx - 5, by - 2, 12, 4);
+    ctx.fillStyle = '#7a5028'; ctx.fillRect(cx - 2, y - 24, 4, TILE); ctx.fillStyle = '#a06a38'; ctx.fillRect(cx - 2, y - 24, 1, TILE);
+    ctx.fillStyle = '#5a3a1c'; ctx.fillRect(cx - 3, by - 34, 6, 34); ctx.fillStyle = '#8a5a2e'; ctx.fillRect(cx - 4, by - 36, 8, 3);
+    if (bk && dm > .35) { ctx.fillStyle = '#4a2e16'; ctx.fillRect(cx - 3, by - 14, 6, 14); ctx.fillStyle = '#8a5a2e'; ctx.fillRect(cx - 4, by - 16, 8, 3); }
+  }
+}
+function wallDamage(p, hp) {
+  if (hp > .75 || p.gate) return; const dm = 1 - hp, h = hash(p.tx + 91, p.ty + 17), hgt = p.tier === 2 ? 30 : 22, x = p.tx * TILE, y = p.ty * TILE;
+  if (h < dm * 1.2) { ctx.strokeStyle = 'rgba(15,10,6,.7)'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(x + 4 + h * 12, y - hgt + 2); ctx.lineTo(x + 10 + h * 10, y - hgt + 12); ctx.lineTo(x + 7 + h * 12, y - hgt + 20); ctx.stroke(); }
+  if (h < dm * .6) { ctx.fillStyle = '#2a241e'; ctx.fillRect(x + 6 + (h * 20 | 0) % 8, y - hgt - 8, 13, 7); ctx.fillStyle = '#6a6258'; ctx.fillRect(x + 4, y + TILE - 6, 5, 3); ctx.fillRect(x + 20, y + TILE - 5, 4, 3); }
+}
+{
+  const _dw = drawWall;
+  drawWall = function (p, t) { const hp = Math.max(0, Math.min(1, (S.wallHP || 0) / WALLHP())); if (p.tier === 0 && !p.gate) return picketDraw(p, hp); _dw(p, t); wallDamage(p, hp); };
+}
+const wallNeed = () => (invN('patch') > 0 ? { patch: 1 } : [{ wood: 3 }, { stone: 6, plank: 1 }, { stone: 8, plank: 2 }][wallTier()]);
+const wNeedTxt = (nd) => Object.entries(nd).map(([m, q]) => q + ' ' + MATS[m].n.toLowerCase()).join(', ');
+{
+  const _fa = farmAction;
+  farmAction = function () {
+    const r = _fa.apply(this, arguments); if (r) return r;
+    if (!G.world || G.home || !WORLD.def || (S.wallHP || 0) >= WALLHP() - 1 || !nearWall(P.x, P.y)) return null;
+    const nd = wallNeed(); return { a: 'wrepair', label: 'Repair the ' + WALLN[wallTier()].toLowerCase() + ' (' + wNeedTxt(nd) + ')' + (haveN(nd) ? '' : ' - need more') };
+  };
+  const _df = doFarm;
+  doFarm = function (fa) {
+    if (!fa || fa.a !== 'wrepair') return _df.apply(this, arguments);
+    const nd = wallNeed(); if (!haveN(nd)) { toast('To repair the wall you need ' + wNeedTxt(nd)); return; }
+    takeN(nd, 1); const add = nd.patch ? .3 : .15, before = S.wallHP || 0; S.wallHP = Math.min(WALLHP(), before + WALLHP() * add);
+    skXp('craft', 2); sfx('hit'); burst(P.x + 16 * (P.face || 1), P.y - 18, '#c8a060', 8); ftext(P.x, P.y - 54, 'Wall ' + Math.round(S.wallHP / WALLHP() * 100) + '%', '#9be86a', 13, 1.2); save();
+  };
+}
 
 /* ============ items ============ */
 const RCOL = ['#b8bfc4', '#5fb2f5', '#f2d25a', '#ff8a3c'], RNAME = ['Common', 'Magic', 'Rare', 'Legendary'];
@@ -4500,7 +4603,7 @@ else bootNotes();
 if (0) { S.seen.farm = 1; save(); showStory('A Field Gone to Weed', ['South of the square, past the lamps, Lanternrest has a little field again. The seed box by the gate holds six turnip seeds to start you off.', 'Stand in the field and press the action button to till, plant, water and harvest the patch around you. Watered crops keep growing while you are away, even down in the dungeons.', 'Sell what you grow, or bring crops to Elder Ashe: she has plans to restore the whole town, one building at a time.'], null, 'Lanternrest grows'); }
 else if (!S.seen.town) { S.seen.town = 1; showStory('Lanternrest', ['The game is now one world. ' + TOWN_INTRO[0], TOWN_INTRO[1], TOWN_INTRO[2]], null, 'Where it begins'); save(); }
 requestAnimationFrame(frame);
-window.__g = { RESCUE, startRaid, raiders, defenceSetup, collectEggs, gatherNear, doGather, craft, invN, invAdd, skL, TL, spawnWild, NT, RCP, furnacePanel, IMG, composeLook, setForm, lookEditor, formTick, LOOK, spawnEnemy, FS, farmTick, doFarm, farmAction, farmPanel, buildProj, heroPick, newGame, S2: (s) => (S = s), wt: (tx, ty) => { const i = ty * MW + tx; return [MW, grid[i], WORLD.gr[i], grassTile(tx, ty, hash(tx, ty), WREG[WORLD.reg[i]]), explored[i]]; }, W_: () => WORLD, hurtPlayer, lpOn, setN, qTarget, showDeath, readScroll, goTown, enterDungeon, usePoi, QS, ENTR, inTown, startWorldRun, WREG, explored: () => explored, doors: () => doors, startVillageRun, showNpc, talkNow, traps: () => traps, stones: () => stones, tickTrans, HEROES, HERO, switchHero, slotOK: (i) => S.hero !== 'summoner' || !!S.spread[i], zones: () => zones, bv,  S: () => S, P, G, D: () => D, update, startRun, startFloor, cast, enemies: () => enemies, minions: () => minions, drops: () => drops, props: () => props, rollItem, calcStats, hurtEnemy, giveCard, render, hud, inp, setS: (s) => { S = normalize(s); calcStats(); }, renderMenu, MENU, showMenu, hideMenu, openPause, toHub, nextFloor, doDash, usePotion, grid: () => grid, flow, bfs, FLIPL, joy, readInp, kd, dropLoot, stairs: () => G.stairs, SPR };
+window.__g = { EL: () => enemies, WHP: () => WALLHP(), WORLD_: () => WORLD, RESCUE, startRaid, raiders, defenceSetup, collectEggs, gatherNear, doGather, craft, invN, invAdd, skL, TL, spawnWild, NT, RCP, furnacePanel, IMG, composeLook, setForm, lookEditor, formTick, LOOK, spawnEnemy, FS, farmTick, doFarm, farmAction, farmPanel, buildProj, heroPick, newGame, S2: (s) => (S = s), wt: (tx, ty) => { const i = ty * MW + tx; return [MW, grid[i], WORLD.gr[i], grassTile(tx, ty, hash(tx, ty), WREG[WORLD.reg[i]]), explored[i]]; }, W_: () => WORLD, hurtPlayer, lpOn, setN, qTarget, showDeath, readScroll, goTown, enterDungeon, usePoi, QS, ENTR, inTown, startWorldRun, WREG, explored: () => explored, doors: () => doors, startVillageRun, showNpc, talkNow, traps: () => traps, stones: () => stones, tickTrans, HEROES, HERO, switchHero, slotOK: (i) => S.hero !== 'summoner' || !!S.spread[i], zones: () => zones, bv,  S: () => S, P, G, D: () => D, update, startRun, startFloor, cast, enemies: () => enemies, minions: () => minions, drops: () => drops, props: () => props, rollItem, calcStats, hurtEnemy, giveCard, render, hud, inp, setS: (s) => { S = normalize(s); calcStats(); }, renderMenu, MENU, showMenu, hideMenu, openPause, toHub, nextFloor, doDash, usePotion, grid: () => grid, flow, bfs, FLIPL, joy, readInp, kd, dropLoot, stairs: () => G.stairs, SPR };
 /* ============ gamepad (Steam Deck / Xbox layout) ============
    Play:  L-stick / D-pad move · A interact · B dash · X Y LB RB skills 1-4 · LT / RT potion · View town scroll · Menu pause
    Menus: L-stick / D-pad move the highlight · A press · B back · R-stick scroll */
